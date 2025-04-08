@@ -19,7 +19,8 @@ def create_ui():
             file_input = gr.File(label="PDFを選択", file_types=[".pdf"])
             upload_btn = gr.Button("アップロード")
             upload_output = gr.Textbox(label="アップロード結果")
-            upload_btn.click(fn=add_pdf_to_vectorstore, inputs=file_input, outputs=upload_output)
+            upload_status = gr.Textbox(lines=1, interactive=False)
+            upload_btn.click(fn=add_pdf_to_vectorstore, inputs=file_input, outputs=upload_status, queue=True)
 
         with gr.Tab("Q&A"):
             gr.Markdown("### 文書に基づいてGPTに質問できます")
