@@ -1,35 +1,55 @@
-# quiz/quiz_generator.py
-import json
-import random
 from langchain.llms import OpenAI
+from langchain.output_parsers import PydanticOutputParser
+from langchain.prompts import PromptTemplate
+from langchain.schema import BaseOutputParser
+from pydantic import BaseModel, Field
+import random
 from vectorstore.store import get_vectorstore
 from .quiz_state import set_current_answer, get_current_answer
+from gradio import update
+
+# Step 1: クイズのスキーマを定義
+class Quiz(BaseModel):
+    question: str = Field(description="クイズの質問文")
+    options: list[str] = Field(description="選択肢 A〜D のリスト")
+    answer: str = Field(description="正解（A, B, C, D のいずれか）")
+
+# Step 2: パーサーを作成
+parser = PydanticOutputParser(pydantic_object=Quiz)
+
+# Step 3: プロンプトテンプレート
+prompt_template = PromptTemplate(
+    template=(
+        "次の文章に基づいて、4択のクイズを1問作成してください。\n"
+        "クイズは以下の形式で出力してください（これは例ではなく、正確なJSON構造で返してください）：\n\n"
+        "{{\n"
+        "  \"question\": \"クイズの質問文\",\n"
+        "  \"options\": [\"選択肢A\", \"選択肢B\", \"選択肢C\", \"選択肢D\"],\n"
+        "  \"answer\": \"A\"\n"
+        "}}\n\n"
+        "文章：\n'''{content}'''\n"
+    ),
+    input_variables=["content"],
+    partial_variables={}
+)
 
 def generate_quiz_question():
     vectordb = get_vectorstore()
     docs = vectordb._collection.get()["documents"]
     if not docs:
-        return "文書がベクトルストアに存在しません。", []
+        return "ベクトルストアに文書がありません。", []
 
     content = random.choice(docs)
-    prompt = (
-        "次の文章に基づいて、クイズの質問を1つ作成してください。\n"
-        "4つの選択肢 (A, B, C, D) を提示し、正解も指定してください。\n"
-        "出力形式はJSONで、question, options, answerをキーとしてください。\n\n"
-        f"文章:\n'''{content}'''"
-    )
     llm = OpenAI(temperature=0)
+    prompt = prompt_template.format(content=content)
     response = llm.predict(prompt)
 
     try:
-        quiz = json.loads(response)
-        question = quiz["question"]
-        options = quiz["options"]
-        answer = quiz["answer"]
-        set_current_answer(answer, options)
-        return question, options
-    except Exception:
-        return "クイズの生成に失敗しました。", []
+        quiz: Quiz = parser.parse(response)
+        set_current_answer(quiz.answer, quiz.options)
+        return quiz.question, update(choices=quiz.options, value=None)
+    except Exception as e:
+        return f"❌ クイズの構造解析に失敗しました: {e}", []
 
 def check_answer(user_choice):
     correct = get_current_answer()
