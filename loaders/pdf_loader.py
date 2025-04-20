@@ -7,9 +7,11 @@ import pytesseract
 from langchain.schema import Document
 from PIL import Image
 import platform
+import os
 
 def add_pdf_to_vectorstore(pdf_file):
-    vectordb = get_vectorstore()
+    doc_id = os.path.splitext(os.path.basename(pdf_file.name))[0]
+    vectordb = get_vectorstore(doc_id)
     loader = PyPDFLoader(pdf_file.name)
     documents = loader.load()
     splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
