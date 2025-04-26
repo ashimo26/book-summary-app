@@ -1,6 +1,6 @@
 # chains/qa_chain.py
 from langchain.chains import RetrievalQA
-from langchain.llms import OpenAI
+from langchain_openai import ChatOpenAI
 from vectorstore.store import get_vectorstore
 import os
 import shutil
@@ -8,7 +8,7 @@ import shutil
 def answer_question(query, doc_id):
     vectordb = get_vectorstore(doc_id)
     retriever = vectordb.as_retriever(search_kwargs={"k": 4})
-    qa = RetrievalQA.from_chain_type(llm=OpenAI(temperature=0), chain_type="stuff", retriever=retriever)
+    qa = RetrievalQA.from_chain_type(llm=ChatOpenAI(model="gpt-4o",temperature=0), chain_type="stuff", retriever=retriever)
     return qa.run(query)
 
 def delete_doc(doc_id):

@@ -16,6 +16,7 @@ pytesseract = "*"
 document = "*"
 tiktoken = "==0.9.0"
 googletrans = "==4.0.2"
+langchain-openai = "==0.3.14"
 
 [dev-packages]
 

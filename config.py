@@ -7,6 +7,10 @@ load_dotenv()
 
 # OpenAI APIキーを環境変数から取得
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY が .env に設定されていません")
+
+if not GOOGLE_API_KEY:
+    raise ValueError("GOOGLE_API_KEY が .env に設定されていません")

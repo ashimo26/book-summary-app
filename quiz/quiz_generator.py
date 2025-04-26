@@ -1,4 +1,4 @@
-from langchain.llms import OpenAI
+from langchain_openai import ChatOpenAI
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 from langchain.schema import BaseOutputParser
@@ -33,14 +33,14 @@ prompt_template = PromptTemplate(
     partial_variables={}
 )
 
-def generate_quiz_question():
-    vectordb = get_vectorstore()
+def generate_quiz_question(doc_id):
+    vectordb = get_vectorstore(doc_id)
     docs = vectordb._collection.get()["documents"]
     if not docs:
         return "ベクトルストアに文書がありません。", []
 
     content = random.choice(docs)
-    llm = OpenAI(temperature=0)
+    llm = ChatOpenAI(model="gpt-4o", temperature=0)
     prompt = prompt_template.format(content=content)
     response = llm.predict(prompt)
 

@@ -6,7 +6,7 @@ import os
 
 _vectordb = None
 
-def get_vectorstore(doc_id):
+def create_vectorstore(doc_id):
     translator = Translator()
 
     async def translate_doc_id():
@@ -24,6 +24,17 @@ def get_vectorstore(doc_id):
 
     return Chroma(
         collection_name=translated_doc_id,
+        embedding_function=OpenAIEmbeddings(),
+        persist_directory=persist_dir
+    )
+
+def get_vectorstore(doc_id):
+    persist_dir = os.path.join("chroma_store", doc_id)
+    if not os.path.exists(persist_dir):
+        raise ValueError(f"'{doc_id}' は存在しません。再度アップロードを試みてください。")
+    
+    return Chroma(
+        collection_name=doc_id,
         embedding_function=OpenAIEmbeddings(),
         persist_directory=persist_dir
     )
